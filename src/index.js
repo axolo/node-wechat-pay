@@ -119,6 +119,36 @@ class WechatPay {
     const result = await xml.parser(res);
     return result;
   }
+
+
+  /**
+   * **处理支付结果通知**
+   *
+   * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_7&index=8
+   * @param {string} body 微信支付结果通知，通常以`XML`格式`POST`方法发送
+   * @return {object} 带响应信息的处理结果，其中`response`需以`XML`格式响应给微信支付
+   * @memberof WechatPay
+   */
+  async callback(body) {
+    const { xml } = this;
+    const result = await xml.parser(body);
+    const { result_code, return_code } = result;
+    if (result_code === 'SUCCESS' && return_code === 'SUCCESS') {
+      const resultSign = result.sign;
+      delete result.sign;
+      const checkSign = this.sign(result, result.sign_type);
+      if (checkSign !== resultSign) {
+        return {
+          return_code: 'FAIL',
+          return_msg: 'INVALID_SIGN',
+          out_trade_no: result.out_trade_no,
+        };
+      }
+      const response = await xml.builder({ return_code: 'SUCCESS' });
+      return { ...result, sign: resultSign, response };
+    }
+    return result;
+  }
 }
 
 module.exports = WechatPay;
