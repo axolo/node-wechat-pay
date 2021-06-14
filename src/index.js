@@ -9,7 +9,8 @@ class WechatPay {
   constructor(config) {
     this.config = {
       baseUrl: 'https://api.mch.weixin.qq.com/v3',
-      logger: console.log,
+      contentType: 'application/json',
+      logger: console,
       error: WechatPayError,
       http: axios,
       ...config,
@@ -17,6 +18,8 @@ class WechatPay {
     this.logger = this.config.logger;
     this.error = this.config.error;
     this.http = this.config.http;
+    this.http.defaults.baseURL = this.config.baseUrl;
+    this.http.defaults.headers.post['Content-Type'] = this.config.contentType;
   }
 
   /**
@@ -74,32 +77,6 @@ class WechatPay {
       }
     }
   }
-
-  /**
-   * **请求微信支付API**
-   *
-   * @see https://github.com/axios/axios
-   * @param {string} api API接口路径，如：/pay/unifiedorder
-   * @param {object} options 参数，与`axios`配置一致
-   * @return {object} 响应，JSON格式，与微信支付返回XML格式数据一致
-   * @memberof WechatPay
-   */
-  async execute(api, options) {
-    const { xml, config } = this;
-    const { baseUrl } = config;
-    const sign = this.sign(options.data);
-    const data = await xml.builder({ ...options.data, sign });
-    const { data: res } = await config.axios({
-      ...options,
-      url: baseUrl + api,
-      method: 'POST',
-      headers: { 'Content-Type': 'text/xml' },
-      data,
-    });
-    const result = await xml.parser(res);
-    return result;
-  }
-
 
   /**
    * **处理支付结果通知**

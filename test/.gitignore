@@ -1,0 +1,4 @@
+# WARNING: please keep config secret, do NOT push to repository
+
+config.*
+# !config.js
