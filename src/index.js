@@ -2,41 +2,21 @@
 
 const crypto = require('crypto');
 const axios = require('axios');
-const deepmerge = require('deepmerge');
 const { nanoid } = require('nanoid');
 const WechatPayError = require('./error');
-const WechatPayLogger = require('./logger');
-const Xml = require('./xml');
 
 class WechatPay {
   constructor(config) {
-    const defaultConfig = {
-      baseUrl: 'https://api.mch.weixin.qq.com',
-      xml: {
-        parser: {
-          explicitArray: false,
-          explicitRoot: false,
-        },
-        builder: {
-          rootName: 'xml',
-          headless: true,
-          renderOpts: { pretty: false },
-        },
-      },
-      error: {
-        name: 'WechatPayError',
-      },
-      returnCode: {
-        success: 'SUCCESS',
-        fail: 'FAIL',
-      },
-      axios,
-      nonceStr: nanoid,
+    this.config = {
+      baseUrl: 'https://api.mch.weixin.qq.com/v3',
+      logger: console.log,
+      error: WechatPayError,
+      http: axios,
+      ...config,
     };
-    this.config = deepmerge(defaultConfig, config);
-    this.xml = new Xml(this.config.xml);
-    this.logger = new WechatPayLogger(this.config.logger);
-    this.error = WechatPayError;
+    this.logger = this.config.logger;
+    this.error = this.config.error;
+    this.http = this.config.http;
   }
 
   /**
@@ -49,7 +29,7 @@ class WechatPay {
    * @memberof WechatPay
    */
   nonceStr() {
-    return this.config.nonceStr();
+    return nanoid();
   }
 
   /**

@@ -1,14 +1,10 @@
 {
   "name": "@axolo/node-wechat-pay",
-  "version": "0.2.0",
-  "description": "Wechat pay v2 Node.js SDK.",
+  "version": "0.3.0",
+  "description": "Wechat pay v3 Node.js SDK.",
   "main": "src/index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test node -r dotenv-flow/config"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/axolo/node-wechat-pay.git"
+    "test": "node test/index.js"
   },
   "keywords": [
     "node-wechat-pay",
@@ -21,17 +17,15 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.21.1",
-    "camelsnake": "^2.0.0",
-    "deepmerge": "^4.2.2",
-    "log4js": "^6.3.0",
-    "nanoid": "^3.1.23",
-    "xml2js": "^0.4.23"
+    "nanoid": "^3.1.23"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
-    "dotenv-flow": "^3.2.0",
     "eslint": "^7.28.0",
     "eslint-config-egg": "^9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axolo/node-wechat-pay.git"
   },
   "bugs": {
     "url": "https://github.com/axolo/node-wechat-pay/issues"

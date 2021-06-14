@@ -1,7 +1,10 @@
 'use strict';
 
 class WechatPayError extends Error {
-  // TODO: throw friendly exception with name
+  constructor(message) {
+    super(message);
+    this.name = this.constructor.name;
+  }
 }
 
 module.exports = WechatPayError;
