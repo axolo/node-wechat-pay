@@ -66,7 +66,11 @@ Promise of parse [Wechat Pay Event].
 
 ```js
 const WechatPay = require('@axolo/node-wechat-pay');
-const wechatPay = new WechatPay({ appid: 'wx2421b1c4370ec43b', mchId: '10000100', mchKey: 'KEY' });
+const wechatPay = new WechatPay({
+  appid: 'wx2421b1c4370ec43b',
+  mchId: '10000100',
+  mchKey: 'KEY',
+});
 
 const body = `<xml>
   <appid><![CDATA[wx2421b1c4370ec43b]]></appid>

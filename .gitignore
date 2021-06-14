@@ -12,5 +12,5 @@ run/
 *.un~
 typings/
 .nyc_output/
-.env*
+.env.*
 certs/
