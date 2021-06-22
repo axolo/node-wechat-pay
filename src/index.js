@@ -7,19 +7,15 @@ const WechatPayError = require('./error');
 
 class WechatPay {
   constructor(config) {
-    this.config = {
-      baseUrl: 'https://api.mch.weixin.qq.com/v3',
-      contentType: 'application/json',
-      logger: console,
-      error: WechatPayError,
-      http: axios,
-      ...config,
-    };
+    const error = WechatPayError;
+    const logger = console;
+    const http = axios;
+    http.defaults.baseURL = 'https://api.mch.weixin.qq.com/v3';
+    http.defaults.headers.post['Content-Type'] = 'application/json';
+    this.config = { error, logger, http, ...config };
     this.logger = this.config.logger;
     this.error = this.config.error;
     this.http = this.config.http;
-    this.http.defaults.baseURL = this.config.baseUrl;
-    this.http.defaults.headers.post['Content-Type'] = this.config.contentType;
   }
 
   /**
