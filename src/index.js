@@ -10,97 +10,94 @@ class WechatPay {
     const error = WechatPayError;
     const logger = console;
     const http = axios;
-    http.defaults.baseURL = 'https://api.mch.weixin.qq.com/v3';
+    http.defaults.baseURL = 'https://api.mch.weixin.qq.com';
     http.defaults.headers.post['Content-Type'] = 'application/json';
-    this.config = { error, logger, http, ...config };
+    this.config = {
+      authorizationType: 'WECHATPAY2-SHA256-RSA2048',
+      signAlgorithm: 'RSA-SHA256',
+      signEncode: 'base64',
+      error,
+      logger,
+      http,
+      ...config,
+    };
     this.logger = this.config.logger;
     this.error = this.config.error;
     this.http = this.config.http;
   }
 
-  /**
-   * **返回随机字符串**
-   *
-   * 生成器默认为`nanoid`，可在配置中自定义
-   *
-   * @see https://github.com/ai/nanoid
-   * @return {string} 随机字符串
-   * @memberof WechatPay
-   */
   nonceStr() {
     return nanoid();
   }
 
-  /**
-   * **参数排序**
-   *
-   * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
-   * @param {object} data 参数对象（乱序）
-   * @param {object} key 商户平台设置的密钥key
-   * @return {string} 规定格式的签名字串
-   * @memberof WechatPay
-   */
-  stringSignTemp(data, key) {
-    const sa = Object.keys(data).sort().map(k => (data[k] && [ k, data[k] ].join('=')));
-    const sak = [ ...sa, [ 'key', key ].join('=') ];
-    return sak.join('&');
+  timestamp() {
+    return Math.ceil(Date.now() / 1000);
+  }
+
+  createSign(data, privateKey) {
+    const { signAlgorithm, signEncode } = this.config;
+    const sign = crypto.createSign(signAlgorithm);
+    sign.update(data);
+    sign.end();
+    return sign.sign(privateKey).toString(signEncode);
+  }
+
+  verifySign(data, sign, publicKey) {
+    const { signAlgorithm, signEncode } = this.config;
+    const verify = crypto.createVerify(signAlgorithm);
+    verify.update(data);
+    verify.end();
+    return verify.verify(publicKey, Buffer.from(sign, signEncode));
   }
 
   /**
    * **获取带签名的参数**
    *
-   * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
-   * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=20_1
+   * @see https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_0.shtml
+   * @see https://developers.weixin.qq.com/community/pay/doc/0004ae23130ab8b7b08bc95305f400
    * @param {object} params 请求参数
-   * @param {string} [type='md5'] 请求参数
    * @return {string} 签名字符串
    * @memberof WechatPay
    */
-  sign(params, type = 'MD5') {
-    const { mchKey } = this.config;
-    const stringSignTemp = this.stringSignTemp(params, mchKey);
-    switch (type) {
-      default:
-      case 'MD5': {
-        const hash = crypto.createHash(type).update(stringSignTemp, 'utf8').digest('hex');
-        const sign = hash.toUpperCase();
-        return sign;
-      }
-      case 'HMAC-SHA256': {
-        const hmac = crypto.createHmac('sha256', mchKey).update(stringSignTemp, 'utf8').digest('hex');
-        const sign = hmac.toUpperCase();
-        return sign;
-      }
-    }
+  signature(params) {
+    // TODO: upload file meta json
+    const { method, url, data } = params;
+    const { mchCertKey } = this.config;
+    console.log({ mchCertKey });
+    const nonce_str = this.nonceStr();
+    const timestamp = this.timestamp();
+    const dataJSON = (data && data instanceof Object) ? JSON.stringify(data) : '';
+    const plain = `${method}\n${url}\n${nonce_str}\n${timestamp}\n${dataJSON}\n`;
+    const signature = this.createSign(plain, mchCertKey);
+    return { signature, nonce_str, timestamp, plain };
+  }
+
+  authorization(params) {
+    const { mchId: mchid, authorizationType, mchCertSn: serial_no } = this.config;
+    const sign = this.signature(params);
+    console.log(sign);
+    const { signature, nonce_str, timestamp } = sign;
+    const authorization = authorizationType + ' ' + [
+      `mchid="${mchid}"`,
+      `nonce_str="${nonce_str}"`,
+      `timestamp="${timestamp}"`,
+      `serial_no="${serial_no}"`,
+      `signature="${signature}"`,
+    ].join();
+    return authorization;
   }
 
   /**
    * **处理支付结果通知**
    *
-   * @see https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_7&index=8
-   * @param {string} body 微信支付结果通知，通常以`XML`格式`POST`方法发送
-   * @return {object} 带响应信息的处理结果，其中`response`需以`XML`格式响应给微信支付
+   * @see https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_5.shtml
+   * @param {string} data 微信支付结果通知
+   * @return {object} 带响应信息的处理结果
    * @memberof WechatPay
    */
-  async callback(body) {
-    const { xml } = this;
-    const result = await xml.parser(body);
-    const { result_code, return_code } = result;
-    if (result_code === 'SUCCESS' && return_code === 'SUCCESS') {
-      const resultSign = result.sign;
-      delete result.sign;
-      const checkSign = this.sign(result, result.sign_type);
-      if (checkSign !== resultSign) {
-        return {
-          return_code: 'FAIL',
-          return_msg: 'INVALID_SIGN',
-          out_trade_no: result.out_trade_no,
-        };
-      }
-      const response = await xml.builder({ return_code: 'SUCCESS' });
-      return { ...result, sign: resultSign, response };
-    }
-    return result;
+  async callback(data) {
+    // TODO: 处理支付通知
+    return data;
   }
 }
 
