@@ -3,11 +3,8 @@
 const WechatPay = require('../src');
 const wechatPay = new WechatPay({ test: true });
 
-wechatPay.http({
-  method: 'POST',
-  url: '/pay/transactions/jsapi',
-}).then(res => {
-  wechatPay.logger.info(res.data);
+wechatPay.http.get('/v3/certificates').then(res => {
+  wechatPay.logger.info(res);
 }).catch(err => {
   wechatPay.logger.error(err);
 });

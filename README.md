@@ -10,80 +10,92 @@ yarn add @axolo/node-wechat-pay
 
 ## API
 
-please see `src` and `test` for more api usage.
+for more usage please see `src` and `test`.
 
 ### constructor(config)
 
-> params
+|    config    | required |                    description                    |
+| ------------ | :------: | ------------------------------------------------- |
+| appId        |   yes    | wechat pay appid                                  |
+| mchId        |   yes    | wechat pay mchid                                  |
+| mchCertSn    |   yes    | wechat pay merchant certificate serial number     |
+| mchCertKey   |   yes    | wehcat pay merchant certificate private key       |
+| mchCert      |   yes    | wehcat pay merchant certificate                   |
+| apiV3Key     |   yes    | wechat pay api v3 secret key                      |
+| notifyUrl    |   yes    | [Wechat Pay Notify] callback url                  |
+| platformCert |          | wehcat pay platform certificate                   |
+| currency     |          | default is `CNY`                                  |
+| appType      |          | mp = miniprogram                                  |
+| http         |          | HTTP Client, default is built-in [axios] instance |
+| error        |          | class of Error, default is `WechatPayError`       |
+| logger       |          | fuction of logger, default is `console`           |
+| cache        |          | default is memory                                 |
 
-|      config       | required |               description                |
-| ----------------- | :------: | ---------------------------------------- |
-| appId             |   yes    | Wechat App Id                            |
-| mchId             |   yes    | Wechat Merchant Id                       |
-| mchKey            |   yes    | Wechat Merchant Key                      |
-| subAppid          |          | Wechat Sub App Id                        |
-| subMchId          |          | Wechat Sub Merchant Key                  |
-| mchCert           |          | Wechat Merchant certificate              |
-| mchCertPrivateKey |          | Wechat Merchant certificate private key  |
-| mchEventKey       |          | [Wechat Pay Event] APIv3 key             |
-| notifyUrl         |          | [Wechat Pay Event] notify url            |
-| baseUrl           |          | base URL of Wechat Pay API               |
-| error             |          | class of Error, default `WechatPayError` |
-| logger            |          | fuction of logger, default `console`     |
-| http              |          | HTTP Client, default [axios]             |
+return a instance of `WechatPay` Node.js SDK.
 
+### http(config)
 
-> return
+| params |   description   |
+| ------ | --------------- |
+| config | config of axios |
 
-A instance of `WechatPay` OpenAPI Node.js SDK.
+return Promise of wechat pay result as axios response.
 
-### callback(body)
+### nonceStr()
+
+return `nonce_str`.
+
+### timestamp()
+
+return `timestamp`.
+
+### notify(body)
 
 
 | params |           description           |
 | ------ | ------------------------------- |
-| body   | [Wechat Pay Event] request body |
+| body   | [Wechat Pay Notify] request body |
 
-> return
-
-Promise of parse [Wechat Pay Event].
+return Promise of parse [Wechat Pay Notify].
 
 ## Example
 
 ```js
+const fs = require('fs');
 const WechatPay = require('@axolo/node-wechat-pay');
 
 const wechatPay = new WechatPay({
-  appid: 'wx2421b1c4370ec43b',
-  mchId: '10000100',
-  mchKey: 'KEY',
+  appType: 'mp',
+  appId: 'wechat_pay_appid',
+  mchId: 'wechat_pay_mchid',
+  mchCertSn: 'wechat_pay_mch_cert_serial_no',
+  mchCertKey: fs.readFileSync('wehcat_pay_mch_cert_private_key.pem'),
+  mchCert: fs.readFileSync('wehcat_pay_mch_cert.pem'),
+  apiV3Key: 'wechat_pay_api_v3_secret',
+  notifyUrl: 'https://path-of-wechat-apy-notify',
 });
 
-wechatPay.logger.log(wechatPay);
+wechatPay.http.get('/v3/certificates').then(res => {
+  wechatPay.logger.log(res.data);
+}).catch(err => {
+  wechatPay.logger.error(err);
+});
 ```
 
 ## Test
 
-### config
-
-```js
-// test/config.js
-'use strict';
-
-module.exports = {
-  mchId: 'MCH_ID',
-  appId: 'APP_ID',
-};
-```
-
-### run
-
 ```bash
-node test/http.js # test http request
+yarn test
 ```
+
+## TODO
+
+- test
+- support upload file
+- support notify callback
 
 > Yueming Fang
 
-[Wechat Pay]: https://pay.weixin.qq.com/wiki/doc/api/index.html
-[Wechat Pay Event]: https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_7&index=8
+[Wechat Pay]: https://pay.weixin.qq.com/wiki/doc/apiv3/index.shtml
+[Wechat Pay Notify]: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_1_5.shtml
 [axios]: https://github.com/axios/axios

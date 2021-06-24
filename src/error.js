@@ -1,9 +1,10 @@
 'use strict';
 
 class WechatPayError extends Error {
-  constructor(message) {
+  constructor(message, info) {
     super(message);
     this.name = this.constructor.name;
+    this.info = info;
   }
 }
 

@@ -7,23 +7,47 @@ const WechatPayError = require('./error');
 
 class WechatPay {
   constructor(config) {
+    const baseUrl = 'https://api.mch.weixin.qq.com';
     const error = WechatPayError;
     const logger = console;
+    const cache = {};
     const http = axios;
-    http.defaults.baseURL = 'https://api.mch.weixin.qq.com';
+    http.defaults.baseURL = baseUrl;
     http.defaults.headers.post['Content-Type'] = 'application/json';
+    http.interceptors.request.use(config => {
+      const { method, url, data } = config;
+      const authorization = this.authorization({ method: method.toUpperCase(), url, data });
+      config.headers.Authorization = authorization;
+      return config;
+    }, error => {
+      return Promise.reject(error);
+    });
+    http.interceptors.response.use(response => {
+      // return response?.data || response;
+      return response;
+    }, error => {
+      if (error.isAxiosError) {
+        const { data } = error.response;
+        const err = new this.error(data.message, data);
+        return Promise.reject(err);
+      }
+      return Promise.reject(error);
+    });
     this.config = {
-      authorizationType: 'WECHATPAY2-SHA256-RSA2048',
-      signAlgorithm: 'RSA-SHA256',
+      authorizationSchema: 'WECHATPAY2-SHA256-RSA2048',
+      signAlgorithm: 'RSA-SHA256', // sha256WithRSAEncryption
       signEncode: 'base64',
+      baseUrl,
       error,
       logger,
+      cache,
       http,
       ...config,
     };
     this.logger = this.config.logger;
     this.error = this.config.error;
     this.http = this.config.http;
+    this.cache = this.config.cache;
   }
 
   nonceStr() {
@@ -31,22 +55,18 @@ class WechatPay {
   }
 
   timestamp() {
-    return Math.ceil(Date.now() / 1000);
+    return Math.round(Date.now() / 1000);
   }
 
   createSign(data, privateKey) {
     const { signAlgorithm, signEncode } = this.config;
-    const sign = crypto.createSign(signAlgorithm);
-    sign.update(data);
-    sign.end();
+    const sign = crypto.createSign(signAlgorithm).update(data).end();
     return sign.sign(privateKey).toString(signEncode);
   }
 
   verifySign(data, sign, publicKey) {
     const { signAlgorithm, signEncode } = this.config;
-    const verify = crypto.createVerify(signAlgorithm);
-    verify.update(data);
-    verify.end();
+    const verify = crypto.createVerify(signAlgorithm).update(data).end();
     return verify.verify(publicKey, Buffer.from(sign, signEncode));
   }
 
@@ -54,36 +74,44 @@ class WechatPay {
    * **获取带签名的参数**
    *
    * @see https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_0.shtml
-   * @see https://developers.weixin.qq.com/community/pay/doc/0004ae23130ab8b7b08bc95305f400
+   * @see https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay7_1.shtml
    * @param {object} params 请求参数
    * @return {string} 签名字符串
    * @memberof WechatPay
    */
   signature(params) {
-    // TODO: upload file meta json
     const { method, url, data } = params;
+    const dataRaw = (data && data instanceof Object) ? JSON.stringify(data) : '';
+    // TODO: upload file meta json
+    // if (method == 'POST' || method == 'PUT' || method == 'PATCH') {
+    //   var data = pm.request.body.raw;
+    //   if (canonicalUrl.endsWith('upload')) {
+    //     var result = JSON.parse(JSON.stringify(pm.request.body.formdata));
+    //     for (var i in result) {
+    //       if (result[i].key == 'meta') {
+    //         data = result[i].value;
+    //       }
+    //     }
+    //   }
+    // }
     const { mchCertKey } = this.config;
-    console.log({ mchCertKey });
     const nonce_str = this.nonceStr();
     const timestamp = this.timestamp();
-    const dataJSON = (data && data instanceof Object) ? JSON.stringify(data) : '';
-    const plain = `${method}\n${url}\n${nonce_str}\n${timestamp}\n${dataJSON}\n`;
+    const plain = `${method}\n${url}\n${timestamp}\n${nonce_str}\n${dataRaw}\n`;
     const signature = this.createSign(plain, mchCertKey);
     return { signature, nonce_str, timestamp, plain };
   }
 
   authorization(params) {
-    const { mchId: mchid, authorizationType, mchCertSn: serial_no } = this.config;
+    const { mchId: mchid, authorizationSchema, mchCertSn: serial_no } = this.config;
     const sign = this.signature(params);
-    console.log(sign);
     const { signature, nonce_str, timestamp } = sign;
-    const authorization = authorizationType + ' ' + [
-      `mchid="${mchid}"`,
-      `nonce_str="${nonce_str}"`,
-      `timestamp="${timestamp}"`,
-      `serial_no="${serial_no}"`,
-      `signature="${signature}"`,
-    ].join();
+    const authorization = `${authorizationSchema} `
+      + `mchid="${mchid}",`
+      + `nonce_str="${nonce_str}",`
+      + `timestamp="${timestamp}",`
+      + `serial_no="${serial_no}",`
+      + `signature="${signature}"`;
     return authorization;
   }
 
@@ -95,7 +123,7 @@ class WechatPay {
    * @return {object} 带响应信息的处理结果
    * @memberof WechatPay
    */
-  async callback(data) {
+  async notify(data) {
     // TODO: 处理支付通知
     return data;
   }
