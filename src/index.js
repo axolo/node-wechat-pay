@@ -54,7 +54,7 @@ class WechatPay {
     return nanoid();
   }
 
-  timestamp() {
+  timeStamp() {
     return Math.round(Date.now() / 1000);
   }
 
@@ -96,7 +96,7 @@ class WechatPay {
     // }
     const { mchCertKey } = this.config;
     const nonce_str = this.nonceStr();
-    const timestamp = this.timestamp();
+    const timestamp = this.timeStamp();
     const plain = `${method}\n${url}\n${timestamp}\n${nonce_str}\n${dataRaw}\n`;
     const signature = this.createSign(plain, mchCertKey);
     return { signature, nonce_str, timestamp, plain };
@@ -113,6 +113,10 @@ class WechatPay {
       + `serial_no="${serial_no}",`
       + `signature="${signature}"`;
     return authorization;
+  }
+
+  paySign(params) {
+    return JSON.stringify(params);
   }
 
   /**

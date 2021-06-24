@@ -45,9 +45,17 @@ return Promise of wechat pay result as axios response.
 
 return `nonce_str`.
 
-### timestamp()
+### timeStamp()
 
 return `timestamp`.
+
+### paySign(params)
+
+| params |    description    |
+| ------ | ----------------- |
+| params | params of paySign |
+
+return `paySign`.
 
 ### notify(body)
 
@@ -90,9 +98,10 @@ yarn test
 
 ## TODO
 
-- test
+- support pay sign
 - support upload file
 - support notify callback
+- test
 
 > Yueming Fang
 
