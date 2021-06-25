@@ -10,34 +10,37 @@ yarn add @axolo/node-wechat-pay
 
 ## API
 
-For more usage, please see `src` and `test`.
+For more usage please issue.
 
-### constructor(config)
+### constructor(config = {})
 
 > params
 
-|    config    | required |                    description                    |
-| ------------ | :------: | ------------------------------------------------- |
-| appId        |   yes    | wechat pay appid                                  |
-| mchId        |   yes    | wechat pay mchid                                  |
-| mchCertSn    |   yes    | wechat pay merchant certificate serial number     |
-| mchCertKey   |   yes    | wehcat pay merchant certificate private key       |
-| mchCert      |   yes    | wehcat pay merchant certificate                   |
-| apiV3Key     |   yes    | wechat pay api v3 secret key                      |
-| notifyUrl    |   yes    | [Wechat Pay Notify] callback url                  |
-| platformCert |          | wehcat pay platform certificate                   |
-| currency     |          | default is `CNY`                                  |
-| appType      |          | mp = miniprogram                                  |
-| http         |          | HTTP Client, default is built-in [axios] instance |
-| error        |          | class of Error, default is `WechatPayError`       |
-| logger       |          | fuction of logger, default is `console`           |
-| cache        |          | default is `{}`                                   |
+|    config     | required |                             description                             |
+| ------------- | :------: | ------------------------------------------------------------------- |
+| appId         |   yes    | wechat pay appid                                                    |
+| mchId         |   yes    | wechat pay mchid                                                    |
+| mchCert       |   yes    | wehcat pay merchant certificate                                     |
+| mchCertKey    |   yes    | wehcat pay merchant certificate private key                         |
+| mchCertSn     |   yes    | wechat pay merchant certificate serial number                       |
+| apiV3Key      |   yes    | wechat pay api v3 secret key                                        |
+| notifyUrl     |   yes    | [Wechat Pay Notify] callback url                                    |
+| notifySuccess |          | [Wechat Pay Notify] need response `{ code: 'SUCCESS' }` event types |
+| platformCert  |          | wehcat pay platform certificate                                     |
+| currency      |          | default is `CNY`                                                    |
+| appType       |          | mp = miniprogram                                                    |
+| http          |          | HTTP Client, default is built-in [axios] instance                   |
+| error         |          | class of Error, default is `WechatPayError`                         |
+| logger        |          | function of logger, default is `console`                            |
+| cache         |          | default is `{}`, it is reserved                                           |
 
 > return
 
 `Object` of `WechatPay` Node.js SDK instance.
 
 ### http(config)
+
+http client for request wechat pay API.
 
 > params
 
@@ -53,22 +56,22 @@ For more usage, please see `src` and `test`.
 
 > return
 
-`String` of `nonce_str`.
+`String` of `nonce_str`, random string.
 
 ### timeStamp()
 
 > return
 
-`String` of `timestamp`.
+`String` of `timestamp`, unix timestamp second.
 
 ### payRequest(payPackage, signType = 'RSA')
 
 > params
 
-|   param    | required |                description                |
-| ---------- | :------: | ----------------------------------------- |
-| payPackage |   yes    | package of wechat pay, as `prepay_id=***` |
-| signType   |          | signType of wechat pay, default is `RSA`  |
+|   param    | required |                 description                 |
+| ---------- | :------: | ------------------------------------------- |
+| payPackage |   yes    | package of wechat pay, like `prepay_id=***` |
+| signType   |          | signType of wechat pay, default is `RSA`    |
 
 > return
 
@@ -80,20 +83,25 @@ For more usage, please see `src` and `test`.
 | timeStamp | timestamp, seconds                          |
 | nonceStr  | nonce string                                |
 | package   | package of wechat pay, like `prepay_id=***` |
-| signType  | signType of wechat pay, like `RSA`          |
 | paySign   | base64 signature                            |
+| signType  | signType of wechat pay, like `RSA`          |
 
 ### notify(data)
 
 > params
 
-| param |           description            |
-| ----- | -------------------------------- |
-| data  | [Wechat Pay Notify] request body |
+| param | required |           description            |
+| ----- | :------: | -------------------------------- |
+| data  |   yes    | [Wechat Pay Notify] request body |
 
 > return
 
-`Promise` of parse [Wechat Pay Notify].
+`Object` of [Wechat Pay Notify] decrypt resource with response suggestion.
+
+|   prop   |                   description                   |
+| -------- | ----------------------------------------------- |
+| resource | decrytp resource                                |
+| response | response suggestion. like `{ code: 'SUCCESS' }` |
 
 ## Example
 
@@ -109,7 +117,7 @@ const wechatPay = new WechatPay({
   mchCertKey: fs.readFileSync('wehcat_pay_mch_cert_private_key.pem'),
   mchCert: fs.readFileSync('wehcat_pay_mch_cert.pem'),
   apiV3Key: 'wechat_pay_api_v3_secret',
-  notifyUrl: 'https://url-of-wechat-apy-notify',
+  notifyUrl: 'https://url-of-wechat-pay-notify',
 });
 
 wechatPay.http.get('/v3/certificates').then(res => {
@@ -127,8 +135,7 @@ yarn test
 
 ## TODO
 
-- support notify callback
-- support upload file
+- support upload
 - test
 
 > Yueming Fang
