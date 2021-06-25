@@ -1,6 +1,6 @@
 {
   "name": "@axolo/node-wechat-pay",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Wechat pay v3 Node.js SDK.",
   "main": "src/index.js",
   "scripts": {
@@ -26,6 +26,9 @@
   "devDependencies": {
     "eslint": "^7.29.0",
     "eslint-config-egg": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "repository": {
     "type": "git",
