@@ -10,9 +10,11 @@ yarn add @axolo/node-wechat-pay
 
 ## API
 
-for more usage please see `src` and `test`.
+For more usage, please see `src` and `test`.
 
 ### constructor(config)
+
+> params
 
 |    config    | required |                    description                    |
 | ------------ | :------: | ------------------------------------------------- |
@@ -29,42 +31,69 @@ for more usage please see `src` and `test`.
 | http         |          | HTTP Client, default is built-in [axios] instance |
 | error        |          | class of Error, default is `WechatPayError`       |
 | logger       |          | fuction of logger, default is `console`           |
-| cache        |          | default is memory                                 |
+| cache        |          | default is `{}`                                   |
 
-return a instance of `WechatPay` Node.js SDK.
+> return
+
+`Object` of `WechatPay` Node.js SDK instance.
 
 ### http(config)
 
-| params |   description   |
-| ------ | --------------- |
-| config | config of axios |
+> params
 
-return Promise of wechat pay result as axios response.
+| param  | required |   description   |
+| ------ | :------: | --------------- |
+| config |   yes    | config of axios |
+
+> return
+
+`Promise` of wechat pay result as axios response.
 
 ### nonceStr()
 
-return `nonce_str`.
+> return
+
+`String` of `nonce_str`.
 
 ### timeStamp()
 
-return `timestamp`.
+> return
 
-### paySign(params)
+`String` of `timestamp`.
 
-| params |    description    |
-| ------ | ----------------- |
-| params | params of paySign |
+### paySign(payPackage, signType = 'RSA')
 
-return `paySign`.
+> params
 
-### notify(body)
+|   param    | required |                description                |
+| ---------- | :------: | ----------------------------------------- |
+| payPackage |   yes    | package of wechat pay, as `prepay_id=***` |
+| signType   |          | signType of wechat pay, default is `RSA`  |
 
+> return
 
-| params |           description           |
-| ------ | ------------------------------- |
-| body   | [Wechat Pay Notify] request body |
+`Object` of wechat pay sign
 
-return Promise of parse [Wechat Pay Notify].
+|   prop    |                 description                 |
+| --------- | ------------------------------------------- |
+| appId     | wehcat pay appid                            |
+| timeStamp | timestamp, seconds                          |
+| nonceStr  | nonce string                                |
+| package   | package of wechat pay, like `prepay_id=***` |
+| signType  | signType of wechat pay, like `RSA`          |
+| paySign   | base64 signature                            |
+
+### notify(data)
+
+> params
+
+| param |           description            |
+| ----- | -------------------------------- |
+| data  | [Wechat Pay Notify] request body |
+
+> return
+
+`Promise` of parse [Wechat Pay Notify].
 
 ## Example
 
@@ -80,7 +109,7 @@ const wechatPay = new WechatPay({
   mchCertKey: fs.readFileSync('wehcat_pay_mch_cert_private_key.pem'),
   mchCert: fs.readFileSync('wehcat_pay_mch_cert.pem'),
   apiV3Key: 'wechat_pay_api_v3_secret',
-  notifyUrl: 'https://path-of-wechat-apy-notify',
+  notifyUrl: 'https://url-of-wechat-apy-notify',
 });
 
 wechatPay.http.get('/v3/certificates').then(res => {
@@ -98,9 +127,8 @@ yarn test
 
 ## TODO
 
-- support pay sign
-- support upload file
 - support notify callback
+- support upload file
 - test
 
 > Yueming Fang

@@ -55,7 +55,7 @@ class WechatPay {
   }
 
   timeStamp() {
-    return Math.round(Date.now() / 1000);
+    return Math.round(Date.now() / 1000).toString();
   }
 
   createSign(data, privateKey) {
@@ -115,8 +115,14 @@ class WechatPay {
     return authorization;
   }
 
-  paySign(params) {
-    return JSON.stringify(params);
+  paySign(payPackage, signType = 'RSA') {
+    const { appId, mchCertKey } = this.config;
+    const nonceStr = this.nonceStr();
+    const timeStamp = this.timeStamp();
+    const plain = `${appId}\n${timeStamp}\n${nonceStr}\n${payPackage}\n`;
+    const paySign = this.createSign(plain, mchCertKey);
+    const sign = { appId, timeStamp, nonceStr, package: payPackage, signType, paySign };
+    return sign;
   }
 
   /**
