@@ -61,7 +61,7 @@ For more usage, please see `src` and `test`.
 
 `String` of `timestamp`.
 
-### paySign(payPackage, signType = 'RSA')
+### payRequest(payPackage, signType = 'RSA')
 
 > params
 
@@ -72,7 +72,7 @@ For more usage, please see `src` and `test`.
 
 > return
 
-`Object` of wechat pay sign
+`Object` of wechat pay payment request
 
 |   prop    |                 description                 |
 | --------- | ------------------------------------------- |
