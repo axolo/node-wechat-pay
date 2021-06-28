@@ -1,6 +1,6 @@
 {
   "name": "@axolo/node-wechat-pay",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Wechat pay v3 Node.js SDK.",
   "main": "src/index.js",
   "scripts": {

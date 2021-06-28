@@ -29,10 +29,10 @@ For more usage please issue.
 | platformCert  |          | wehcat pay platform certificate                                     |
 | currency      |          | default is `CNY`                                                    |
 | appType       |          | mp = miniprogram                                                    |
-| http          |          | HTTP Client, default is built-in [axios] instance                   |
+| http          |          | HTTP Client, default is built-in [axios] **instance**               |
 | error         |          | class of Error, default is `WechatPayError`                         |
 | logger        |          | function of logger, default is `console`                            |
-| cache         |          | default is `{}`, it is reserved                                           |
+| cache         |          | default is `{}`, it is reserved                                     |
 
 > return
 

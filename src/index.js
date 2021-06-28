@@ -24,13 +24,12 @@ class WechatPay {
    * @memberof WechatPay
    */
   constructor(config = {}) {
-    const baseUrl = 'https://api.mch.weixin.qq.com';
+    const baseURL = 'https://api.mch.weixin.qq.com';
     const error = WechatPayError; // 错误
     const logger = console; // 日志
     const cache = {}; // 缓存
     // 配置请求客户端
-    const http = axios;
-    http.defaults.baseURL = baseUrl;
+    const http = axios.create({ baseURL });
     http.defaults.headers.post['Content-Type'] = 'application/json';
     http.interceptors.request.use(httpConfig => {
       const { method, url, data } = httpConfig;
@@ -64,7 +63,7 @@ class WechatPay {
       signAlgorithm: 'RSA-SHA256', // sha256WithRSAEncryption
       signEncode: 'base64',
       notifySuccess,
-      baseUrl,
+      baseURL,
       error,
       logger,
       cache,
