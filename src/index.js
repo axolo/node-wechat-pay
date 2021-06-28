@@ -240,9 +240,10 @@ class WechatPay {
     const { notifySuccess } = this.config;
     const code = notifySuccess.some(i => i === event_type) ? 'SUCCESS' : event_type;
     const message = event_type;
-    data.response = { code, message };
-    data.resource = this.decryptNotify(resource);
-    return data;
+    const result = { ...data };
+    result.response = { code, message };
+    result.resource = this.decryptNotify(resource);
+    return result;
   }
 }
 
