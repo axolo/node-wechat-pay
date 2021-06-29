@@ -24,11 +24,8 @@ class WechatPay {
    * @memberof WechatPay
    */
   constructor(config = {}) {
-    const baseURL = 'https://api.mch.weixin.qq.com';
-    const error = WechatPayError; // 错误
-    const logger = console; // 日志
-    const cache = {}; // 缓存
     // 配置请求客户端
+    const baseURL = config.baseURL || 'https://api.mch.weixin.qq.com';
     const http = axios.create({ baseURL });
     http.defaults.headers.post['Content-Type'] = 'application/json';
     http.interceptors.request.use(httpConfig => {
@@ -45,7 +42,7 @@ class WechatPay {
     }, error => {
       if (error.isAxiosError) {
         const { data } = error.response;
-        const err = new this.error(data.message, data);
+        const err = new this.Error(data.message, data);
         return Promise.reject(err);
       }
       return Promise.reject(error);
@@ -59,20 +56,20 @@ class WechatPay {
     ].concat(config.notifySuccess).filter(i => i); // 自定义类型
     // 合并配置
     this.config = {
+      Error: WechatPayError, // 错误
+      logger: console, // 日志
+      cache: {}, // 缓存
       authorizationSchema: 'WECHATPAY2-SHA256-RSA2048',
       signAlgorithm: 'RSA-SHA256', // sha256WithRSAEncryption
       signEncode: 'base64',
-      notifySuccess,
       baseURL,
-      error,
-      logger,
-      cache,
+      notifySuccess,
       http,
       ...config,
     };
     // 定义属性
+    this.Error = this.config.Error;
     this.logger = this.config.logger;
-    this.error = this.config.error;
     this.http = this.config.http;
     this.cache = this.config.cache;
   }
@@ -146,13 +143,13 @@ class WechatPay {
   signature(params) {
     const { method, url, data } = params;
     const dataRaw = (data && data instanceof Object) ? JSON.stringify(data) : '';
-    // TODO: upload file meta json
-    // if (method == 'POST' || method == 'PUT' || method == 'PATCH') {
-    //   var data = pm.request.body.raw;
-    //   if (canonicalUrl.endsWith('upload')) {
-    //     var result = JSON.parse(JSON.stringify(pm.request.body.formdata));
-    //     for (var i in result) {
-    //       if (result[i].key == 'meta') {
+    // TODO: upload file meta json, like
+    // if ([ 'POST', 'PUT', 'PATCH' ].includes(method)) {
+    //   let metaRaw = (meta && meta instanceof Object) ? JSON.stringify(meta) : '';
+    //   if (url.endsWith('upload')) {
+    //     let result = JSON.parse(JSON.stringify(pm.request.body.formdata));
+    //     for (let i in result) {
+    //       if (result[i].key === 'meta') {
     //         data = result[i].value;
     //       }
     //     }
@@ -243,9 +240,10 @@ class WechatPay {
     const { notifySuccess } = this.config;
     const code = notifySuccess.some(i => i === event_type) ? 'SUCCESS' : event_type;
     const message = event_type;
-    data.response = { code, message };
-    data.resource = this.decryptNotify(resource);
-    return data;
+    const result = { ...data };
+    result.response = { code, message };
+    result.resource = this.decryptNotify(resource);
+    return result;
   }
 }
 
